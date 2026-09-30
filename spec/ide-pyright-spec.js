@@ -18,6 +18,52 @@ const register = () => {
   return { adapter, disposable };
 };
 
+describe("ide-pyright IPython source service", () => {
+  const leases = [];
+  afterEach(() => {
+    for (const lease of leases.splice(0).reverse()) lease.dispose();
+  });
+  const editor = (scopeName, filePath) => ({
+    getGrammar: () => ({ scopeName }),
+    getPath: () => filePath,
+  });
+  it("keeps ordinary Python on incremental sync and requests projections for .ipy", () => {
+    const { adapter } = register();
+    expect(adapter.needsDocumentTransform(editor("source.python", "plain.py"))).toBe(false);
+    expect(adapter.needsDocumentTransform(editor("source.python.ipy", "mixed.ipy"))).toBe(true);
+    expect(adapter.needsDocumentTransform(editor("source.python", "mixed.ipy"))).toBe(true);
+  });
+  it("does not let disposal of an older provider remove its replacement", async () => {
+    const first = { isApplicable: () => true, project: jasmine.createSpy("old projection") };
+    const snapshot = { text: "value = 1", isCurrent: () => true };
+    const second = {
+      isApplicable: () => true,
+      project: jasmine.createSpy("current projection").and.resolveTo(snapshot),
+    };
+    const old = main.consumeIPythonSource(first);
+    leases.push(old, main.consumeIPythonSource(second));
+    old.dispose();
+    const { adapter } = register();
+    const item = editor("source.python.ipy", "mixed.ipy");
+    const signal = new AbortController().signal;
+    expect(await adapter.getDocumentProjection(item, { signal })).toBe(snapshot);
+    expect(second.project).toHaveBeenCalledWith(item, { signal });
+    expect(first.project).not.toHaveBeenCalled();
+  });
+  it("refuses unavailable or stale projections rather than forwarding mixed source", async () => {
+    const { adapter } = register();
+    const item = editor("source.python.ipy", "mixed.ipy");
+    await expectAsync(adapter.getDocumentProjection(item)).toBeRejected();
+    leases.push(
+      main.consumeIPythonSource({
+        isApplicable: () => true,
+        project: async () => ({ text: "hidden", isCurrent: () => false }),
+      }),
+    );
+    await expectAsync(adapter.getDocumentProjection(item)).toBeRejected();
+  });
+});
+
 describe("ide-pyright server resolution", () => {
   it("prefers the configured path", async () => {
     const launch = await resolveServer(process.execPath);

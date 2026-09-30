@@ -30,6 +30,11 @@
     "format:check": "prettier --check ."
   },
   "consumedServices": {
+    "ipython.source": {
+      "versions": {
+        "^1.0.0": "consumeIPythonSource"
+      }
+    },
     "ide-client": {
       "versions": {
         "^1.0.0": "consumeIdeClient"

@@ -2,6 +2,8 @@
 
 Basedpyright language-server adapter for Python.
 
+Mixed `.ipy` documents are analyzed through the shared `ipython.source` AST projection. Markdown, raw and foreign magic bodies remain in the original file and are excluded from Python analysis. Python bodies keep the original file URI; projected positions and safe edits are mapped back to the editor. The projection is never executed or saved. Ordinary `.py` files keep incremental synchronization, and notebook cells retain the server's native notebook protocol. If the IPython document grammar or source service is unavailable, the adapter refuses to send mixed source as Python.
+
 Registers the Basedpyright language server — the maintained Pyright fork with the language-server features Pylance withholds — with `ide-client`, providing completions, type-checking diagnostics, navigation, inlay hints, semantic highlighting, and refactoring for Python projects. The package keeps its historical `ide-pyright` name; Basedpyright is a drop-in Pyright and reads the same `pyrightconfig.json`.
 
 ## Features
