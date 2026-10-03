@@ -18,6 +18,117 @@ const register = () => {
   return { adapter, disposable };
 };
 
+describe("ide-pyright documentation projections", () => {
+  let adapter;
+  let disposable;
+
+  beforeEach(() => {
+    ({ adapter, disposable } = register());
+  });
+  afterEach(() => disposable.dispose());
+
+  it("recognizes console examples in Python and unlabeled documentation blocks", () => {
+    const contexts = [
+      { scopeName: "source.python", language: "python" },
+      { scopeName: "source.python.ipy", language: "ipython" },
+      { scopeName: "text.plain", language: "pycon" },
+      { language: "python-console" },
+      { scopeName: "text.plain" },
+      {},
+    ];
+    for (const context of contexts) {
+      const projection = adapter.getDocumentationCodeBlockProjection({
+        text: "\n>>> print(1)\n1",
+        ...context,
+      });
+      expect(projection.scopeName).toBe("source.python");
+      expect(projection.text).toBe("\nprint(1)\n");
+    }
+  });
+
+  it("respects explicit non-Python fences, even when their input is valid Python", () => {
+    for (const context of [
+      { scopeName: "source.haskell", language: "haskell" },
+      { scopeName: "source.js", language: "javascript" },
+      { scopeName: "text.plain", language: "text" },
+      { language: "unknown" },
+    ]) {
+      expect(
+        adapter.getDocumentationCodeBlockProjection({ text: ">>> reverse [1, 2, 3]", ...context }),
+      ).toBeNull();
+    }
+  });
+
+  it("requires the first nonblank line to be a separated primary prompt", () => {
+    for (const text of [
+      "",
+      "   \n",
+      ">>>value",
+      "... print(1)",
+      "Example:\n>>> print(1)",
+      "value >>> 1",
+      "(function) def example() -> None",
+    ]) {
+      expect(
+        adapter.getDocumentationCodeBlockProjection({ text, scopeName: "source.python" }),
+      ).toBeNull();
+    }
+  });
+
+  it("maps prompts and input back to CRLF documentation while leaving output neutral", () => {
+    const text =
+      "  >>> for item in [1, 2]:\r\n  ...     print(item)\r\n  1\r\n  ... output\r\n  >>> done = True\r\n";
+    const projection = adapter.getDocumentationCodeBlockProjection({ text });
+    expect(projection.text).toBe("for item in [1, 2]:\n    print(item)\n\n\ndone = True\n");
+
+    const prompts = projection.regions.filter((region) => region.scopes);
+    expect(prompts.map(({ start, end }) => text.slice(start, end))).toEqual([">>>", "...", ">>>"]);
+    for (const prompt of prompts)
+      expect(prompt.scopes).toEqual(["source.python", "punctuation.definition.prompt.python"]);
+
+    const input = projection.regions.filter((region) => region.projectedStart !== undefined);
+    expect(input.map(({ start, end }) => text.slice(start, end))).toEqual([
+      "for item in [1, 2]:",
+      "    print(item)",
+      "done = True",
+    ]);
+    for (const region of input)
+      expect(
+        projection.text.slice(
+          region.projectedStart,
+          region.projectedStart + region.end - region.start,
+        ),
+      ).toBe(text.slice(region.start, region.end));
+
+    for (const output of ["  1", "  ... output"]) {
+      const start = text.indexOf(output);
+      expect(
+        projection.regions.some(
+          (region) => region.start < start + output.length && region.end > start,
+        ),
+      ).toBe(false);
+    }
+  });
+
+  it("stops continuations at output and resumes only at a matching primary prompt", () => {
+    const text = "\t>>> first = 1\n ... wrong_indent\n\t... output\n\t>>> second = 2";
+    const projection = adapter.getDocumentationCodeBlockProjection({ text });
+    expect(projection.text).toBe("first = 1\n\n\nsecond = 2");
+    expect(
+      projection.regions
+        .filter((region) => region.scopes)
+        .map(({ start, end }) => text.slice(start, end)),
+    ).toEqual([">>>", ">>>"]);
+  });
+
+  it("lets the renderer reject a projection that produces no parsed input", () => {
+    const projection = adapter.getDocumentationCodeBlockProjection({ text: ">>>\n..." });
+    expect(projection.text).toBe("\n");
+    expect(projection.validate({ namedChildCount: 0 })).toBe(false);
+    expect(projection.validate({ namedChildCount: 1 })).toBe(true);
+  });
+});
+
 describe("ide-pyright IPython source service", () => {
   const leases = [];
   afterEach(() => {
