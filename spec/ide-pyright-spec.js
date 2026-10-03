@@ -27,11 +27,22 @@ describe("ide-pyright IPython source service", () => {
     getGrammar: () => ({ scopeName }),
     getPath: () => filePath,
   });
-  it("keeps ordinary Python on incremental sync and requests projections for .ipy", () => {
+  it("uses the selected grammar rather than the filename to request IPython projections", () => {
     const { adapter } = register();
     expect(adapter.needsDocumentTransform(editor("source.python", "plain.py"))).toBe(false);
     expect(adapter.needsDocumentTransform(editor("source.python.ipy", "mixed.ipy"))).toBe(true);
-    expect(adapter.needsDocumentTransform(editor("source.python", "mixed.ipy"))).toBe(true);
+    expect(adapter.needsDocumentTransform(editor("source.python", "mixed.ipy"))).toBe(false);
+    expect(adapter.needsDocumentTransform(editor("source.python.ipy", "mixed.py"))).toBe(true);
+  });
+  it("uses root scopes before falling back to an unclassified IPython filename", () => {
+    const { adapter } = register();
+    const scoped = (scopes) => ({
+      getRootScopeDescriptor: () => ({ getScopesArray: () => scopes }),
+      getPath: () => "mixed.ipy",
+    });
+    expect(adapter.needsDocumentTransform(scoped(["source.python"]))).toBe(false);
+    expect(adapter.needsDocumentTransform(scoped(["source.python.ipy"]))).toBe(true);
+    expect(adapter.needsDocumentTransform({ getPath: () => "mixed.ipy" })).toBe(true);
   });
   it("does not let disposal of an older provider remove its replacement", async () => {
     const first = { isApplicable: () => true, project: jasmine.createSpy("old projection") };
