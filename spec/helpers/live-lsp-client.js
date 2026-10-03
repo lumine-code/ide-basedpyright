@@ -167,7 +167,7 @@ class LiveLspClient {
   }
 
   startWorkspaceDiagnostics() {
-    const token = `ide-pyright-live-diagnostic-${++this.partialResultCounter}`;
+    const token = `ide-basedpyright-live-diagnostic-${++this.partialResultCounter}`;
     const items = [];
     const provider = this.registrations("textDocument/diagnostic")[0]?.registerOptions;
     const params = { previousResultIds: [], partialResultToken: token };

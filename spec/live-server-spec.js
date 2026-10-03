@@ -6,7 +6,7 @@ const { LiveLspClient, fileUri } = require("./helpers/live-lsp-client");
 
 const DIAGNOSTIC_SCOPES = [".source.python", ".source.python.ipy"];
 
-describe("ide-pyright bundled server", () => {
+describe("ide-basedpyright bundled server", () => {
   let adapter, client, disposable, rootPath;
   let originalTimeout;
 
@@ -16,8 +16,8 @@ describe("ide-pyright bundled server", () => {
     // A cold Basedpyright process can take more than 15 seconds to finish its
     // dynamic capability registration on a loaded Windows CI runner.
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
-    rootPath = fs.mkdtempSync(path.join(os.tmpdir(), "ide-pyright-live-"));
-    await lumine.packages.activatePackage("ide-pyright");
+    rootPath = fs.mkdtempSync(path.join(os.tmpdir(), "ide-basedpyright-live-"));
+    await lumine.packages.activatePackage("ide-basedpyright");
     disposable = main.consumeIdeClient({
       registerAdapter(registered) {
         adapter = registered;
@@ -30,17 +30,17 @@ describe("ide-pyright bundled server", () => {
   afterEach(async () => {
     await client.stop();
     disposable.dispose();
-    lumine.config.unset("ide-pyright.analysis.diagnosticMode");
-    lumine.config.unset("ide-pyright.features.diagnostics");
+    lumine.config.unset("ide-basedpyright.analysis.diagnosticMode");
+    lumine.config.unset("ide-basedpyright.features.diagnostics");
     for (const scopeSelector of DIAGNOSTIC_SCOPES)
-      lumine.config.unset("ide-pyright.features.diagnostics", { scopeSelector });
-    await lumine.packages.deactivatePackage("ide-pyright");
+      lumine.config.unset("ide-basedpyright.features.diagnostics", { scopeSelector });
+    await lumine.packages.deactivatePackage("ide-basedpyright");
     fs.rmSync(rootPath, { recursive: true, force: true });
     jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
   });
 
   it("advertises and serves Basedpyright's complete shared IDE surface", async () => {
-    lumine.config.set("ide-pyright.analysis.diagnosticMode", "workspace");
+    lumine.config.set("ide-basedpyright.analysis.diagnosticMode", "workspace");
     const filePath = path.join(rootPath, "example.py");
     const source = 'answer: int = "wrong"\nanswer.bi';
     fs.writeFileSync(filePath, source);
@@ -80,9 +80,9 @@ describe("ide-pyright bundled server", () => {
   });
 
   it("finishes workspace progress in push mode when diagnostics are disabled", async () => {
-    lumine.config.set("ide-pyright.analysis.diagnosticMode", "workspace");
+    lumine.config.set("ide-basedpyright.analysis.diagnosticMode", "workspace");
     for (const scopeSelector of DIAGNOSTIC_SCOPES)
-      lumine.config.set("ide-pyright.features.diagnostics", false, { scopeSelector });
+      lumine.config.set("ide-basedpyright.features.diagnostics", false, { scopeSelector });
     const filePath = path.join(rootPath, "example.py");
     const source = 'answer: int = "wrong"\nprint(answer)\n';
     fs.writeFileSync(filePath, source);
@@ -113,11 +113,11 @@ describe("ide-pyright bundled server", () => {
     { label: "IPython", python: false, ipython: true, extension: "py" },
   ]) {
     it(`drains workspace diagnostics when only ${label} diagnostics are enabled`, async () => {
-      lumine.config.set("ide-pyright.analysis.diagnosticMode", "workspace");
-      lumine.config.set("ide-pyright.features.diagnostics", python, {
+      lumine.config.set("ide-basedpyright.analysis.diagnosticMode", "workspace");
+      lumine.config.set("ide-basedpyright.features.diagnostics", python, {
         scopeSelector: ".source.python",
       });
-      lumine.config.set("ide-pyright.features.diagnostics", ipython, {
+      lumine.config.set("ide-basedpyright.features.diagnostics", ipython, {
         scopeSelector: ".source.python.ipy",
       });
       const pythonPath = path.join(rootPath, "workspace.py");

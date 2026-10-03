@@ -1,17 +1,18 @@
 {
-  "name": "ide-pyright",
+  "name": "ide-basedpyright",
   "author": "lumine-code",
   "description": "Basedpyright language-server adapter for Python.",
-  "repository": "https://github.com/lumine-code/ide-pyright",
+  "repository": "https://github.com/lumine-code/ide-basedpyright",
   "bugs": {
-    "url": "https://github.com/lumine-code/ide-pyright/issues"
+    "url": "https://github.com/lumine-code/ide-basedpyright/issues"
   },
   "keywords": [
-    "language-server",
-    "lsp",
     "python",
+    "ipython",
+    "type-checking",
     "intellisense",
-    "type-checking"
+    "language-server",
+    "lsp"
   ],
   "version": "1.0.0",
   "license": "MIT",

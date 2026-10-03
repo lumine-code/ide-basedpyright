@@ -18,7 +18,7 @@ const register = () => {
   return { adapter, disposable };
 };
 
-describe("ide-pyright documentation projections", () => {
+describe("ide-basedpyright documentation projections", () => {
   let adapter;
   let disposable;
 
@@ -129,7 +129,7 @@ describe("ide-pyright documentation projections", () => {
   });
 });
 
-describe("ide-pyright IPython source service", () => {
+describe("ide-basedpyright IPython source service", () => {
   const leases = [];
   afterEach(() => {
     for (const lease of leases.splice(0).reverse()) lease.dispose();
@@ -186,7 +186,7 @@ describe("ide-pyright IPython source service", () => {
   });
 });
 
-describe("ide-pyright server resolution", () => {
+describe("ide-basedpyright server resolution", () => {
   it("prefers the configured path", async () => {
     const launch = await resolveServer(process.execPath);
     expect(launch.command).toBe(process.execPath);
@@ -210,12 +210,15 @@ describe("ide-pyright server resolution", () => {
   });
 
   it("launches a managed copy the same way as the bundled one", async () => {
-    const managed = { modulePath: "/managed/pyright/langserver.index.js", version: "1.1.999" };
+    const managed = {
+      modulePath: "/managed/basedpyright/dist/pyright-langserver.js",
+      version: "1.40.999",
+    };
     const launch = await resolveServer("", managed);
     expect(launch.command).toBe(process.execPath);
     expect(launch.args[0]).toBe(managed.modulePath);
     expect(launch.env.ELECTRON_RUN_AS_NODE).toBe("1");
-    expect(launch.version).toBe("1.1.999");
+    expect(launch.version).toBe("1.40.999");
   });
 
   it("returns to the server this package ships once the managed copy is gone", async () => {
@@ -232,31 +235,31 @@ describe("ide-pyright server resolution", () => {
   });
 });
 
-describe("ide-pyright adapter", () => {
+describe("ide-basedpyright adapter", () => {
   let adapter;
   let disposable;
 
   beforeEach(async () => {
     // Applies the configSchema, so the defaults the adapter reads are the ones
     // the manifest declares rather than undefined.
-    await lumine.packages.activatePackage("ide-pyright");
+    await lumine.packages.activatePackage("ide-basedpyright");
     ({ adapter, disposable } = register());
   });
   afterEach(async () => {
     disposable.dispose();
-    lumine.config.unset("ide-pyright.analysis.warnSlowFileEnumeration");
+    lumine.config.unset("ide-basedpyright.analysis.warnSlowFileEnumeration");
     for (const scopeSelector of [".source.python", ".source.python.ipy"])
-      lumine.config.unset("ide-pyright.features.diagnostics", { scopeSelector });
-    await lumine.packages.deactivatePackage("ide-pyright");
+      lumine.config.unset("ide-basedpyright.features.diagnostics", { scopeSelector });
+    await lumine.packages.deactivatePackage("ide-basedpyright");
   });
 
   it("registers with the language-server service", () => {
-    expect(adapter.id).toBe("ide-pyright");
+    expect(adapter.id).toBe("ide-basedpyright");
     expect(adapter.grammarScopes).toEqual(["source.python", "source.python.ipy"]);
-    expect(adapter.settingsKeyPaths).toEqual(["ide-pyright"]);
+    expect(adapter.settingsKeyPaths).toEqual(["ide-basedpyright"]);
     expect(adapter.restartKeyPaths).toEqual([
-      "ide-pyright.serverPath",
-      "ide-pyright.features.diagnostics",
+      "ide-basedpyright.serverPath",
+      "ide-basedpyright.features.diagnostics",
     ]);
   });
 
@@ -269,10 +272,10 @@ describe("ide-pyright adapter", () => {
     ];
 
     for (const { python, ipython, disablePullDiagnostics } of combinations) {
-      lumine.config.set("ide-pyright.features.diagnostics", python, {
+      lumine.config.set("ide-basedpyright.features.diagnostics", python, {
         scopeSelector: ".source.python",
       });
-      lumine.config.set("ide-pyright.features.diagnostics", ipython, {
+      lumine.config.set("ide-basedpyright.features.diagnostics", ipython, {
         scopeSelector: ".source.python.ipy",
       });
 
@@ -281,9 +284,9 @@ describe("ide-pyright adapter", () => {
   });
 
   it("maps editor settings into the server's configuration sections", () => {
-    lumine.config.set("ide-pyright.analysis.typeCheckingMode", "strict");
-    lumine.config.set("ide-pyright.analysis.extraPaths", ["src", "vendor"]);
-    lumine.config.set("ide-pyright.pythonPath", "/usr/bin/python3");
+    lumine.config.set("ide-basedpyright.analysis.typeCheckingMode", "strict");
+    lumine.config.set("ide-basedpyright.analysis.extraPaths", ["src", "vendor"]);
+    lumine.config.set("ide-basedpyright.pythonPath", "/usr/bin/python3");
 
     const settings = adapter.getSettings();
     expect(settings.python.pythonPath).toBe("/usr/bin/python3");
@@ -322,7 +325,7 @@ describe("ide-pyright adapter", () => {
       undefined,
     );
 
-    lumine.config.set("ide-pyright.analysis.warnSlowFileEnumeration", false);
+    lumine.config.set("ide-basedpyright.analysis.warnSlowFileEnumeration", false);
 
     expect(adapter.getWorkspaceConfiguration("basedpyright.analysis").fileEnumerationTimeout).toBe(
       Number.MAX_SAFE_INTEGER,
@@ -330,7 +333,7 @@ describe("ide-pyright adapter", () => {
   });
 });
 
-describe("ide-pyright features", () => {
+describe("ide-basedpyright features", () => {
   const { configSchema } = require("../package.json");
 
   it("offers a switch only for what Basedpyright advertises", () => {
