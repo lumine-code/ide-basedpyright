@@ -1,0 +1,3 @@
+pre.editor-colors .syntax--punctuation.syntax--definition.syntax--prompt.syntax--python {
+  color: var(--text-color-subtle);
+}

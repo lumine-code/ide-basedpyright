@@ -22,7 +22,8 @@
   "main": "./lib/main",
   "files": [
     "lib",
-    "spec"
+    "spec",
+    "styles"
   ],
   "scripts": {
     "test": "lumine --test spec",
