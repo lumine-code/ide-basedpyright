@@ -1,3 +1,4 @@
+const { serverContext } = require("./server-context");
 const childProcess = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -41,7 +42,7 @@ class LiveLspClient {
   }
 
   async start() {
-    this.launch = await this.adapter.resolveServer({ rootPath: this.rootPath });
+    this.launch = await this.adapter.resolveServer(serverContext({ rootPath: this.rootPath }));
     this.child = childProcess.spawn(this.launch.command, this.launch.args || [], {
       cwd: this.launch.cwd || this.rootPath,
       env: { ...process.env, ...(this.launch.env || {}) },

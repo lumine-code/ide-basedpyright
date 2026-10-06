@@ -1,7 +1,11 @@
+const { serverContext } = require("./helpers/server-context");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { resolveServer, managedServer } = require("../lib/server");
+const { resolveServer: resolveServerWithContext, managedServer } = require("../lib/server");
+const resolveServer = (configuredPath, managedServer = null) =>
+  resolveServerWithContext(serverContext({ rootPath: __dirname, managedServer }), configuredPath);
+
 const main = require("../lib/main");
 
 const register = () => {
@@ -211,7 +215,7 @@ describe("ide-basedpyright server resolution", () => {
 
   it("launches a managed copy the same way as the bundled one", async () => {
     const managed = {
-      modulePath: "/managed/basedpyright/dist/pyright-langserver.js",
+      modulePath: require.resolve("basedpyright/dist/pyright-langserver.js"),
       version: "1.40.999",
     };
     const launch = await resolveServer("", managed);
@@ -363,5 +367,13 @@ describe("ide-basedpyright features", () => {
   it("defaults every feature on", () => {
     for (const [name, schema] of Object.entries(configSchema.features.properties))
       expect(`${name}: ${schema.default}`).toBe(`${name}: true`);
+  });
+});
+
+describe("ide-basedpyright shared server resolution", () => {
+  it("preserves an unavailable selection as null", async () => {
+    const { resolveServer: resolveWithContext } = require("../lib/server");
+    const resolver = { select: jasmine.createSpy("select").and.resolveTo(null) };
+    expect(await resolveWithContext({ rootPath: __dirname, resolver }, "")).toBeNull();
   });
 });

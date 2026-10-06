@@ -61,7 +61,7 @@
   "configSchema": {
     "serverPath": {
       "title": "Server Path",
-      "description": "Absolute path to a Basedpyright `langserver` executable. Leave empty to use the copy the editor installed, or the server that ships with this package.",
+      "description": "Absolute path to a server executable or JavaScript entry. Leave empty to use the installed server, or the bundled copy.",
       "type": "string",
       "default": ""
     },
