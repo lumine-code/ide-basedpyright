@@ -304,6 +304,7 @@ describe("ide-basedpyright adapter", () => {
       "src",
       "vendor",
     ]);
+    expect(adapter.getWorkspaceConfiguration("editor")).toBeUndefined();
   });
 
   it("omits an unset path rather than sending an empty one", () => {
