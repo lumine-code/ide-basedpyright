@@ -18,7 +18,7 @@ describe("ide-basedpyright bundled server", () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
     rootPath = fs.mkdtempSync(path.join(os.tmpdir(), "ide-basedpyright-live-"));
     await lumine.packages.activatePackage("ide-basedpyright");
-    disposable = main.consumeIdeClient({
+    disposable = main.consumeIde({
       registerAdapter(registered) {
         adapter = registered;
         return { dispose() {} };

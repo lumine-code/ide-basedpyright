@@ -3,7 +3,7 @@ const childProcess = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { configurationContext, workspaceConfiguration } = require(
-  path.join(lumine.packages.resolvePackagePath("ide-client"), "lib", "workspace-configuration"),
+  path.join(lumine.packages.resolvePackagePath("ide"), "lib", "workspace-configuration"),
 );
 const { pathToFileURL } = require("url");
 const {
@@ -61,7 +61,7 @@ class LiveLspClient {
       },
     );
     // vscode-jsonrpc reserves $/progress for its token API, so a catch-all
-    // notification handler never sees it. A named handler mirrors ide-client
+    // notification handler never sees it. A named handler mirrors ide
     // and makes work-done progress observable in the live specs.
     this.connection.onNotification("$/progress", (params) => {
       const partial = this.partialResults.get(params.token);
@@ -180,7 +180,7 @@ class LiveLspClient {
     if (provider?.identifier) params.identifier = provider.identifier;
     this.partialResults.set(token, (partial) => items.push(...(partial?.items || [])));
     // Basedpyright keeps the workspace request open after returning its first
-    // partial batch. That is useful to this spec: production ide-client also
+    // partial batch. That is useful to this spec: production ide also
     // consumes the partial results, while work-done progress is a separate
     // token whose `end` is the behavior under test. Own the eventual rejection
     // so teardown does not leave an unhandled promise.

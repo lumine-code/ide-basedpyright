@@ -26,7 +26,7 @@
     "styles"
   ],
   "specPackages": [
-    "ide-client"
+    "ide"
   ],
   "scripts": {
     "test": "lumine --test spec",
@@ -40,9 +40,9 @@
         "^1.0.0": "consumeIPythonSource"
       }
     },
-    "ide-client": {
+    "ide": {
       "versions": {
-        "^1.0.0": "consumeIdeClient"
+        "^1.0.0": "consumeIde"
       }
     }
   },
@@ -282,7 +282,7 @@
         },
         "logLevel": {
           "title": "Log Level",
-          "description": "How much Basedpyright writes to its log, which `ide-client:show-log` opens.",
+          "description": "How much Basedpyright writes to its log, which `ide:show-log` opens.",
           "type": "string",
           "enum": [
             "Error",
