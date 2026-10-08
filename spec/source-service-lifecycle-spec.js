@@ -178,4 +178,31 @@ describe("IPython source provider ownership", () => {
       "IPython source projection is unavailable for this document",
     );
   });
+
+  for (const method of ["applicability", "snapshot"]) {
+    it(`normalizes retired ${method} errors while preserving live ones`, async () => {
+      const source = provider("Retired");
+      const edge = publish(source);
+      const fail = () => {
+        edge.dispose();
+        throw new Error(`Obsolete ${method} error`);
+      };
+      if (method === "applicability") source.isApplicable = fail;
+      else source.snapshot.isCurrent = fail;
+      await expectAsync(adapter.getDocumentProjection(editor)).toBeRejectedWithError(
+        "IPython source projection is unavailable for this document",
+      );
+
+      const live = provider("Live");
+      const liveFailure = () => {
+        throw new Error(`Current ${method} error`);
+      };
+      if (method === "applicability") live.isApplicable = liveFailure;
+      else live.snapshot.isCurrent = liveFailure;
+      publish(live);
+      await expectAsync(adapter.getDocumentProjection(editor)).toBeRejectedWithError(
+        `Current ${method} error`,
+      );
+    });
+  }
 });
