@@ -56,13 +56,10 @@ describe("ide-basedpyright bundled server", () => {
 
     const uri = fileUri(filePath);
     client.open(uri, source);
-    await client.waitFor(
-      () => client.registrations("textDocument/diagnostic").length,
-      "pull-diagnostic registration",
-    );
-    const diagnosticPull = client.startWorkspaceDiagnostics();
     const diagnostics = await client.waitFor(() => {
-      const reports = diagnosticPull.items;
+      const reports = client
+        .messages("textDocument/publishDiagnostics")
+        .map(({ params }) => params);
       return reports.some(({ diagnostics = [] }) =>
         diagnostics.some(({ message }) => /assign/i.test(message)),
       )
@@ -70,6 +67,7 @@ describe("ide-basedpyright bundled server", () => {
         : null;
     }, "assignment diagnostic");
     expect(diagnostics.some(({ message }) => /assign/i.test(message))).toBe(true);
+    expect(client.registrations("textDocument/diagnostic")).toEqual([]);
 
     const completion = await client.request("textDocument/completion", {
       textDocument: { uri },
@@ -112,7 +110,7 @@ describe("ide-basedpyright bundled server", () => {
     { label: "Python", python: true, ipython: false, extension: "ipy" },
     { label: "IPython", python: false, ipython: true, extension: "py" },
   ]) {
-    it(`drains workspace diagnostics when only ${label} diagnostics are enabled`, async () => {
+    it(`finishes workspace progress when only ${label} diagnostics are visible`, async () => {
       lumine.config.set("ide-basedpyright.analysis.diagnosticMode", "workspace");
       lumine.config.set("ide-basedpyright.features.diagnostics", python, {
         scopeSelector: ".source.python",
@@ -127,13 +125,8 @@ describe("ide-basedpyright bundled server", () => {
       fs.writeFileSync(filePath, source);
 
       await client.start();
-      await client.waitFor(
-        () => client.registrations("textDocument/diagnostic").length,
-        "pull-diagnostic registration",
-      );
       const uri = fileUri(filePath);
       client.open(uri, source);
-      const diagnosticPull = client.startWorkspaceDiagnostics();
       await Promise.all([
         client.request("textDocument/documentSymbol", { textDocument: { uri } }),
         client.request("textDocument/semanticTokens/full", { textDocument: { uri } }),
@@ -143,8 +136,8 @@ describe("ide-basedpyright bundled server", () => {
         }),
       ]);
       await client.waitFor(
-        () => diagnosticPull.items.length,
-        "workspace diagnostic partial result",
+        () => client.messages("textDocument/publishDiagnostics").length,
+        "pushed workspace diagnostics",
       );
 
       const progress = await client.waitFor(() => {
@@ -153,6 +146,7 @@ describe("ide-basedpyright bundled server", () => {
       }, "closed workspace progress");
       expect(progress.some(({ kind }) => kind === "begin")).toBe(true);
       expect(progress.some(({ kind }) => kind === "report")).toBe(true);
+      expect(client.registrations("textDocument/diagnostic")).toEqual([]);
     });
   }
 });

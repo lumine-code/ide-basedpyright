@@ -261,21 +261,18 @@ describe("ide-basedpyright adapter", () => {
     expect(adapter.id).toBe("ide-basedpyright");
     expect(adapter.grammarScopes).toEqual(["source.python", "source.python.ipy"]);
     expect(adapter.settingsKeyPaths).toEqual(["ide-basedpyright"]);
-    expect(adapter.restartKeyPaths).toEqual([
-      "ide-basedpyright.serverPath",
-      "ide-basedpyright.features.diagnostics",
-    ]);
+    expect(adapter.restartKeyPaths).toEqual(["ide-basedpyright.serverPath"]);
   });
 
-  it("uses pull diagnostics while either served grammar has diagnostics enabled", () => {
+  it("keeps push diagnostics independent of the local visibility switches", () => {
     const combinations = [
-      { python: false, ipython: false, disablePullDiagnostics: true },
-      { python: true, ipython: false, disablePullDiagnostics: false },
-      { python: false, ipython: true, disablePullDiagnostics: false },
-      { python: true, ipython: true, disablePullDiagnostics: false },
+      { python: false, ipython: false },
+      { python: true, ipython: false },
+      { python: false, ipython: true },
+      { python: true, ipython: true },
     ];
 
-    for (const { python, ipython, disablePullDiagnostics } of combinations) {
+    for (const { python, ipython } of combinations) {
       lumine.config.set("ide-basedpyright.features.diagnostics", python, {
         scopeSelector: ".source.python",
       });
@@ -283,7 +280,7 @@ describe("ide-basedpyright adapter", () => {
         scopeSelector: ".source.python.ipy",
       });
 
-      expect(adapter.getInitializationOptions()).toEqual({ disablePullDiagnostics });
+      expect(adapter.getInitializationOptions()).toEqual({ disablePullDiagnostics: true });
     }
   });
 
