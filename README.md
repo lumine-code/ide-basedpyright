@@ -18,6 +18,8 @@ Registers the Basedpyright language server — the maintained Pyright fork with 
 - **Feature switches**: any of the thirteen capabilities Basedpyright serves can be turned off, which hands it to another Python server on the same file.
 - **Project sessions**: one server per project root, started lazily with the first Python editor.
 
+![Basedpyright explains a Python type mismatch directly in the editor.](.github/demo.png)
+
 ## Installation
 
 To install `ide-basedpyright` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/ide-basedpyright`.

@@ -1,0 +1,16 @@
+{
+  "title": "ide-basedpyright",
+  "description": "Basedpyright explains a Python type mismatch directly in the editor.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "093f8e394e77853d82b3f13ba8649e7798b19f77",
+  "mode": "normal",
+  "fontSettings": "default",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Basedpyright explains a Python type mismatch directly in the editor.",
+      "width": 1100,
+      "height": 490
+    }
+  ]
+}
