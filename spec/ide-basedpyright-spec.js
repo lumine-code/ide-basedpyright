@@ -125,11 +125,23 @@ describe("ide-basedpyright documentation projections", () => {
     ).toEqual([">>>", ">>>"]);
   });
 
-  it("lets the renderer reject a projection that produces no parsed input", () => {
+  it("lets the syntax owner reject a projection that produces no parsed input", async () => {
+    jasmine.useRealClock();
+    await lumine.packages.activatePackage("language-python");
+    const ide = await lumine.packages.loadPackage("ide");
+    const { renderDocumentationCodeBlock } = require(
+      require("node:path").join(ide.path, "lib/documentation-code-block"),
+    );
     const projection = adapter.getDocumentationCodeBlockProjection({ text: ">>>\n..." });
     expect(projection.text).toBe("\n");
-    expect(projection.validate({ namedChildCount: 0 })).toBe(false);
-    expect(projection.validate({ namedChildCount: 1 })).toBe(true);
+    expect(
+      await renderDocumentationCodeBlock({ text: ">>>\n...", scopeName: "source.python" }, adapter),
+    ).toBeNull();
+    const rendered = await renderDocumentationCodeBlock(
+      { text: ">>> 1", scopeName: "source.python" },
+      adapter,
+    );
+    expect(rendered?.textContent).toBe(">>> 1");
   });
 });
 
